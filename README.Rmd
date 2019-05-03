@@ -1,10 +1,17 @@
 ---
 title: "RNA-seq MMP13 Smoke Flu"
 author: "Rui Xiao"
-date: "May 2, 2019"
+date: "May 3, 2019"
 output: 
-  html_document:
-    keep_md: true
+   html_document:
+      keep_md: true
+      toc: true
+      number_sections: true
+      toc_float: true
+      toc_depth: 2
+      df_print: paged
+      theme: united
+      highlight: textmate
 ---
 
 ```{r setup, include=FALSE}
@@ -76,9 +83,9 @@ allList=function(cf){ # select complete unordered test result regarding each coe
 write.csv(cbind(allList(2),allList(3),allList(4),allList(5),allList(6),allList(7),allList(8)),"GLM_All.csv") # combine and write to csv file
 ```
 
-# Functions that selectively output stats for each factor in the model
-```{r outputfunc, message=FALSE}
-# stats on each factor
+# Output filtered gene counts and/or their names to console or data files
+```{r filteroutput, message=FALSE}
+# functions that select stats on each factor
 filterCount=function(cf){
    cat(paste0(colnames(design)[cf]," Counts:\n"))
    return(nrow(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),abs(logFC)>log2(2)&FDR<0.05)))
@@ -97,11 +104,8 @@ filterWrite=function(cf){
    write.csv(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),abs(logFC)>log2(2)&FDR<0.05),
              paste0("",gsub(":","+",colnames(design)[cf]),".csv"))
 }
-```
 
-## Output filtered gene counts and/or their names to console or data files
-```{r glmfilterout, message=FALSE}
-for (i in 2:ncol(design)){
+for (i in 2:ncol(design)){ # uncomment following lines to enable the outputs
    cat(filterCount(i),end="\n")
    # print(filterTop(i))
    # print(filterName(i))

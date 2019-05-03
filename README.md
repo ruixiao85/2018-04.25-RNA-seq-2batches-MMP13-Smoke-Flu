@@ -1,10 +1,17 @@
 ---
 title: "RNA-seq MMP13 Smoke Flu"
 author: "Rui Xiao"
-date: "May 2, 2019"
+date: "May 3, 2019"
 output: 
-  html_document:
-    keep_md: true
+   html_document:
+      keep_md: true
+      toc: true
+      number_sections: true
+      toc_float: true
+      toc_depth: 2
+      df_print: paged
+      theme: united
+      highlight: textmate
 ---
 
 
@@ -30,29 +37,11 @@ dim(c)
 head(c) # count table overview
 ```
 
-```
-##        JK001 JK004 JK005 JK011 JK012 JK014 JK017 JK018 JK021 JK022 JK023
-## Xkr4       2     0     0     0     5     2     1     1     0     0     0
-## Rp1       76     5    89    81    34   141   100    43    25   248   173
-## Sox17   1119   912  1169   417  1401   433   554   201   483   355   113
-## Mrpl15   678   539   586   465   765   395   428   783   612   493   515
-## Lypla1  1434   969  1378   963  1746   856   719  1280  1200  1190  1173
-## Tcea1    877   866   785   688   938   593   685   739   692   772   817
-##        JK028 JK031 JK036 JK039 JK040 JK215 JK217 JK218 JK219 JK228 JK229
-## Xkr4       5     0     0     0     0    15     7     5    10     9    11
-## Rp1       18   106   131     2     4   154   305    56   122    20    31
-## Sox17    427   440   612   327   616  2046  2288  1202  1614   675   663
-## Mrpl15  1110   489   428  1160   998   926  1180   522   943  1101   968
-## Lypla1  1788  1110   931  1270  1145  2791  3623  1494  2783  2574  2407
-## Tcea1   1196   813   654  1051   857  1773  2519  1132  1853  1705  1694
-##        JK230 JK231
-## Xkr4       5    15
-## Rp1      162    99
-## Sox17   1514   982
-## Mrpl15  1000   717
-## Lypla1  2974  2216
-## Tcea1   1841  1354
-```
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["JK001"],"name":[1],"type":["int"],"align":["right"]},{"label":["JK004"],"name":[2],"type":["int"],"align":["right"]},{"label":["JK005"],"name":[3],"type":["int"],"align":["right"]},{"label":["JK011"],"name":[4],"type":["int"],"align":["right"]},{"label":["JK012"],"name":[5],"type":["int"],"align":["right"]},{"label":["JK014"],"name":[6],"type":["int"],"align":["right"]},{"label":["JK017"],"name":[7],"type":["int"],"align":["right"]},{"label":["JK018"],"name":[8],"type":["int"],"align":["right"]},{"label":["JK021"],"name":[9],"type":["int"],"align":["right"]},{"label":["JK022"],"name":[10],"type":["int"],"align":["right"]},{"label":["JK023"],"name":[11],"type":["int"],"align":["right"]},{"label":["JK028"],"name":[12],"type":["int"],"align":["right"]},{"label":["JK031"],"name":[13],"type":["int"],"align":["right"]},{"label":["JK036"],"name":[14],"type":["int"],"align":["right"]},{"label":["JK039"],"name":[15],"type":["int"],"align":["right"]},{"label":["JK040"],"name":[16],"type":["int"],"align":["right"]},{"label":["JK215"],"name":[17],"type":["int"],"align":["right"]},{"label":["JK217"],"name":[18],"type":["int"],"align":["right"]},{"label":["JK218"],"name":[19],"type":["int"],"align":["right"]},{"label":["JK219"],"name":[20],"type":["int"],"align":["right"]},{"label":["JK228"],"name":[21],"type":["int"],"align":["right"]},{"label":["JK229"],"name":[22],"type":["int"],"align":["right"]},{"label":["JK230"],"name":[23],"type":["int"],"align":["right"]},{"label":["JK231"],"name":[24],"type":["int"],"align":["right"]}],"data":[{"1":"2","2":"0","3":"0","4":"0","5":"5","6":"2","7":"1","8":"1","9":"0","10":"0","11":"0","12":"5","13":"0","14":"0","15":"0","16":"0","17":"15","18":"7","19":"5","20":"10","21":"9","22":"11","23":"5","24":"15","_rn_":"Xkr4"},{"1":"76","2":"5","3":"89","4":"81","5":"34","6":"141","7":"100","8":"43","9":"25","10":"248","11":"173","12":"18","13":"106","14":"131","15":"2","16":"4","17":"154","18":"305","19":"56","20":"122","21":"20","22":"31","23":"162","24":"99","_rn_":"Rp1"},{"1":"1119","2":"912","3":"1169","4":"417","5":"1401","6":"433","7":"554","8":"201","9":"483","10":"355","11":"113","12":"427","13":"440","14":"612","15":"327","16":"616","17":"2046","18":"2288","19":"1202","20":"1614","21":"675","22":"663","23":"1514","24":"982","_rn_":"Sox17"},{"1":"678","2":"539","3":"586","4":"465","5":"765","6":"395","7":"428","8":"783","9":"612","10":"493","11":"515","12":"1110","13":"489","14":"428","15":"1160","16":"998","17":"926","18":"1180","19":"522","20":"943","21":"1101","22":"968","23":"1000","24":"717","_rn_":"Mrpl15"},{"1":"1434","2":"969","3":"1378","4":"963","5":"1746","6":"856","7":"719","8":"1280","9":"1200","10":"1190","11":"1173","12":"1788","13":"1110","14":"931","15":"1270","16":"1145","17":"2791","18":"3623","19":"1494","20":"2783","21":"2574","22":"2407","23":"2974","24":"2216","_rn_":"Lypla1"},{"1":"877","2":"866","3":"785","4":"688","5":"938","6":"593","7":"685","8":"739","9":"692","10":"772","11":"817","12":"1196","13":"813","14":"654","15":"1051","16":"857","17":"1773","18":"2519","19":"1132","20":"1853","21":"1705","22":"1694","23":"1841","24":"1354","_rn_":"Tcea1"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 
 ```r
 a=read.csv("SampleAnnotation2Batches.csv",header=T,stringsAsFactors=F,row.names=1)
@@ -60,15 +49,11 @@ a$SingleFactor=paste(a$Batch,a$MMP13,a$SMOKE,a$FLU,sep="_") # merge factors into
 head(a) # sample annotation overview
 ```
 
-```
-##       Batch MMP13 SMOKE FLU       DOB  SAC_DATE SingleFactor
-## JK001     1    KO    RA PBS 2/27/2017 6/26/2017  1_KO_RA_PBS
-## JK004     1    KO    RA PBS 2/27/2017 6/26/2017  1_KO_RA_PBS
-## JK005     1    KO    RA PBS 2/27/2017 6/26/2017  1_KO_RA_PBS
-## JK011     1    WT    SM PBS 2/27/2017 6/29/2017  1_WT_SM_PBS
-## JK012     1    KO    RA FLU 2/27/2017 6/30/2017  1_KO_RA_FLU
-## JK014     1    WT    SM PBS 2/27/2017 6/29/2017  1_WT_SM_PBS
-```
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Batch"],"name":[1],"type":["int"],"align":["right"]},{"label":["MMP13"],"name":[2],"type":["chr"],"align":["left"]},{"label":["SMOKE"],"name":[3],"type":["chr"],"align":["left"]},{"label":["FLU"],"name":[4],"type":["chr"],"align":["left"]},{"label":["DOB"],"name":[5],"type":["chr"],"align":["left"]},{"label":["SAC_DATE"],"name":[6],"type":["chr"],"align":["left"]},{"label":["SingleFactor"],"name":[7],"type":["chr"],"align":["left"]}],"data":[{"1":"1","2":"KO","3":"RA","4":"PBS","5":"2/27/2017","6":"6/26/2017","7":"1_KO_RA_PBS","_rn_":"JK001"},{"1":"1","2":"KO","3":"RA","4":"PBS","5":"2/27/2017","6":"6/26/2017","7":"1_KO_RA_PBS","_rn_":"JK004"},{"1":"1","2":"KO","3":"RA","4":"PBS","5":"2/27/2017","6":"6/26/2017","7":"1_KO_RA_PBS","_rn_":"JK005"},{"1":"1","2":"WT","3":"SM","4":"PBS","5":"2/27/2017","6":"6/29/2017","7":"1_WT_SM_PBS","_rn_":"JK011"},{"1":"1","2":"KO","3":"RA","4":"FLU","5":"2/27/2017","6":"6/30/2017","7":"1_KO_RA_FLU","_rn_":"JK012"},{"1":"1","2":"WT","3":"SM","4":"PBS","5":"2/27/2017","6":"6/29/2017","7":"1_WT_SM_PBS","_rn_":"JK014"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 
 # Preprocess the input data
 
@@ -82,15 +67,11 @@ y <- calcNormFactors(y)
 head(y$samples[,2:3])
 ```
 
-```
-##       lib.size norm.factors
-## JK001 20100075    0.9927551
-## JK004 13444148    0.9744933
-## JK005 19755033    1.0433833
-## JK011 17655062    0.9687881
-## JK012 21767921    1.0802167
-## JK014 14472144    1.0178222
-```
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["lib.size"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["norm.factors"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"20100075","2":"0.9927551","_rn_":"JK001"},{"1":"13444148","2":"0.9744933","_rn_":"JK004"},{"1":"19755033","2":"1.0433833","_rn_":"JK005"},{"1":"17655062","2":"0.9687881","_rn_":"JK011"},{"1":"21767921","2":"1.0802167","_rn_":"JK012"},{"1":"14472144","2":"1.0178222","_rn_":"JK014"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 
 ```r
 logcpm <- cpm(y, prior.count=2, log=TRUE)
@@ -150,10 +131,10 @@ allList=function(cf){ # select complete unordered test result regarding each coe
 write.csv(cbind(allList(2),allList(3),allList(4),allList(5),allList(6),allList(7),allList(8)),"GLM_All.csv") # combine and write to csv file
 ```
 
-# Functions that selectively output stats for each factor in the model
+# Output filtered gene counts and/or their names to console or data files
 
 ```r
-# stats on each factor
+# functions that select stats on each factor
 filterCount=function(cf){
    cat(paste0(colnames(design)[cf]," Counts:\n"))
    return(nrow(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),abs(logFC)>log2(2)&FDR<0.05)))
@@ -172,12 +153,8 @@ filterWrite=function(cf){
    write.csv(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),abs(logFC)>log2(2)&FDR<0.05),
              paste0("",gsub(":","+",colnames(design)[cf]),".csv"))
 }
-```
 
-## Output filtered gene counts and/or their names to console or data files
-
-```r
-for (i in 2:ncol(design)){
+for (i in 2:ncol(design)){ # uncomment following lines to enable the outputs
    cat(filterCount(i),end="\n")
    # print(filterTop(i))
    # print(filterName(i))

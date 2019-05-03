@@ -3,8 +3,11 @@ title: "RNA-seq MMP13 Smoke Flu"
 author: "Rui Xiao"
 date: "May 3, 2019"
 output: 
+   github_document:
+      toc: true
+      toc_depth: 2
    html_document:
-      keep_md: true
+      keep_md: false
       toc: true
       number_sections: true
       toc_float: true
@@ -80,7 +83,7 @@ allList=function(cf){ # select complete unordered test result regarding each coe
    colnames(dt)=paste0(colnames(design)[cf],"_",colnames(dt))
    return(dt)
 }
-write.csv(cbind(allList(2),allList(3),allList(4),allList(5),allList(6),allList(7),allList(8)),"GLM_All.csv") # combine and write to csv file
+# write.csv(cbind(allList(2),allList(3),allList(4),allList(5),allList(6),allList(7),allList(8)),"GLM_All.csv") # combine and write to csv file
 ```
 
 # Output filtered gene counts and/or their names to console or data files

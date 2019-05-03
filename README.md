@@ -1,24 +1,20 @@
----
-title: "RNA-seq MMP13 Smoke Flu"
-author: "Rui Xiao"
-date: "May 3, 2019"
-output: 
-   html_document:
-      keep_md: true
-      toc: true
-      number_sections: true
-      toc_float: true
-      toc_depth: 2
-      df_print: paged
-      theme: united
-      highlight: textmate
----
+RNA-seq MMP13 Smoke Flu
+================
+Rui Xiao
+May 3, 2019
 
+-   [Read the raw count-table and sample annotation files](#read-the-raw-count-table-and-sample-annotation-files)
+-   [Preprocess the input data](#preprocess-the-input-data)
+-   [Principal Component Analysis](#principal-component-analysis)
+-   [Fit generalized linear model using edgeR](#fit-generalized-linear-model-using-edger)
+-   [Output filtered gene counts and/or their names to console or data files](#output-filtered-gene-counts-andor-their-names-to-console-or-data-files)
+-   [Plot heatmap with top genes found significant for each factor](#plot-heatmap-with-top-genes-found-significant-for-each-factor)
+-   [Plot significant gene counts of each major factor in a Venn diagram](#plot-significant-gene-counts-of-each-major-factor-in-a-venn-diagram)
 
+Read the raw count-table and sample annotation files
+====================================================
 
-# Read the raw count-table and sample annotation files
-
-```r
+``` r
 if (!requireNamespace("BiocManager",quietly=T)) install.packages("BiocManager")
 library(BiocManager)
 
@@ -29,35 +25,52 @@ rm(c1,c2) # free memory if no longer needed
 dim(c)
 ```
 
-```
-## [1] 23420    24
-```
+    ## [1] 23420    24
 
-```r
+``` r
 head(c) # count table overview
 ```
 
-<div data-pagedtable="false">
-  <script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["JK001"],"name":[1],"type":["int"],"align":["right"]},{"label":["JK004"],"name":[2],"type":["int"],"align":["right"]},{"label":["JK005"],"name":[3],"type":["int"],"align":["right"]},{"label":["JK011"],"name":[4],"type":["int"],"align":["right"]},{"label":["JK012"],"name":[5],"type":["int"],"align":["right"]},{"label":["JK014"],"name":[6],"type":["int"],"align":["right"]},{"label":["JK017"],"name":[7],"type":["int"],"align":["right"]},{"label":["JK018"],"name":[8],"type":["int"],"align":["right"]},{"label":["JK021"],"name":[9],"type":["int"],"align":["right"]},{"label":["JK022"],"name":[10],"type":["int"],"align":["right"]},{"label":["JK023"],"name":[11],"type":["int"],"align":["right"]},{"label":["JK028"],"name":[12],"type":["int"],"align":["right"]},{"label":["JK031"],"name":[13],"type":["int"],"align":["right"]},{"label":["JK036"],"name":[14],"type":["int"],"align":["right"]},{"label":["JK039"],"name":[15],"type":["int"],"align":["right"]},{"label":["JK040"],"name":[16],"type":["int"],"align":["right"]},{"label":["JK215"],"name":[17],"type":["int"],"align":["right"]},{"label":["JK217"],"name":[18],"type":["int"],"align":["right"]},{"label":["JK218"],"name":[19],"type":["int"],"align":["right"]},{"label":["JK219"],"name":[20],"type":["int"],"align":["right"]},{"label":["JK228"],"name":[21],"type":["int"],"align":["right"]},{"label":["JK229"],"name":[22],"type":["int"],"align":["right"]},{"label":["JK230"],"name":[23],"type":["int"],"align":["right"]},{"label":["JK231"],"name":[24],"type":["int"],"align":["right"]}],"data":[{"1":"2","2":"0","3":"0","4":"0","5":"5","6":"2","7":"1","8":"1","9":"0","10":"0","11":"0","12":"5","13":"0","14":"0","15":"0","16":"0","17":"15","18":"7","19":"5","20":"10","21":"9","22":"11","23":"5","24":"15","_rn_":"Xkr4"},{"1":"76","2":"5","3":"89","4":"81","5":"34","6":"141","7":"100","8":"43","9":"25","10":"248","11":"173","12":"18","13":"106","14":"131","15":"2","16":"4","17":"154","18":"305","19":"56","20":"122","21":"20","22":"31","23":"162","24":"99","_rn_":"Rp1"},{"1":"1119","2":"912","3":"1169","4":"417","5":"1401","6":"433","7":"554","8":"201","9":"483","10":"355","11":"113","12":"427","13":"440","14":"612","15":"327","16":"616","17":"2046","18":"2288","19":"1202","20":"1614","21":"675","22":"663","23":"1514","24":"982","_rn_":"Sox17"},{"1":"678","2":"539","3":"586","4":"465","5":"765","6":"395","7":"428","8":"783","9":"612","10":"493","11":"515","12":"1110","13":"489","14":"428","15":"1160","16":"998","17":"926","18":"1180","19":"522","20":"943","21":"1101","22":"968","23":"1000","24":"717","_rn_":"Mrpl15"},{"1":"1434","2":"969","3":"1378","4":"963","5":"1746","6":"856","7":"719","8":"1280","9":"1200","10":"1190","11":"1173","12":"1788","13":"1110","14":"931","15":"1270","16":"1145","17":"2791","18":"3623","19":"1494","20":"2783","21":"2574","22":"2407","23":"2974","24":"2216","_rn_":"Lypla1"},{"1":"877","2":"866","3":"785","4":"688","5":"938","6":"593","7":"685","8":"739","9":"692","10":"772","11":"817","12":"1196","13":"813","14":"654","15":"1051","16":"857","17":"1773","18":"2519","19":"1132","20":"1853","21":"1705","22":"1694","23":"1841","24":"1354","_rn_":"Tcea1"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
+    ##        JK001 JK004 JK005 JK011 JK012 JK014 JK017 JK018 JK021 JK022 JK023
+    ## Xkr4       2     0     0     0     5     2     1     1     0     0     0
+    ## Rp1       76     5    89    81    34   141   100    43    25   248   173
+    ## Sox17   1119   912  1169   417  1401   433   554   201   483   355   113
+    ## Mrpl15   678   539   586   465   765   395   428   783   612   493   515
+    ## Lypla1  1434   969  1378   963  1746   856   719  1280  1200  1190  1173
+    ## Tcea1    877   866   785   688   938   593   685   739   692   772   817
+    ##        JK028 JK031 JK036 JK039 JK040 JK215 JK217 JK218 JK219 JK228 JK229
+    ## Xkr4       5     0     0     0     0    15     7     5    10     9    11
+    ## Rp1       18   106   131     2     4   154   305    56   122    20    31
+    ## Sox17    427   440   612   327   616  2046  2288  1202  1614   675   663
+    ## Mrpl15  1110   489   428  1160   998   926  1180   522   943  1101   968
+    ## Lypla1  1788  1110   931  1270  1145  2791  3623  1494  2783  2574  2407
+    ## Tcea1   1196   813   654  1051   857  1773  2519  1132  1853  1705  1694
+    ##        JK230 JK231
+    ## Xkr4       5    15
+    ## Rp1      162    99
+    ## Sox17   1514   982
+    ## Mrpl15  1000   717
+    ## Lypla1  2974  2216
+    ## Tcea1   1841  1354
 
-```r
+``` r
 a=read.csv("SampleAnnotation2Batches.csv",header=T,stringsAsFactors=F,row.names=1)
 a$SingleFactor=paste(a$Batch,a$MMP13,a$SMOKE,a$FLU,sep="_") # merge factors into one for some further analysis
 head(a) # sample annotation overview
 ```
 
-<div data-pagedtable="false">
-  <script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Batch"],"name":[1],"type":["int"],"align":["right"]},{"label":["MMP13"],"name":[2],"type":["chr"],"align":["left"]},{"label":["SMOKE"],"name":[3],"type":["chr"],"align":["left"]},{"label":["FLU"],"name":[4],"type":["chr"],"align":["left"]},{"label":["DOB"],"name":[5],"type":["chr"],"align":["left"]},{"label":["SAC_DATE"],"name":[6],"type":["chr"],"align":["left"]},{"label":["SingleFactor"],"name":[7],"type":["chr"],"align":["left"]}],"data":[{"1":"1","2":"KO","3":"RA","4":"PBS","5":"2/27/2017","6":"6/26/2017","7":"1_KO_RA_PBS","_rn_":"JK001"},{"1":"1","2":"KO","3":"RA","4":"PBS","5":"2/27/2017","6":"6/26/2017","7":"1_KO_RA_PBS","_rn_":"JK004"},{"1":"1","2":"KO","3":"RA","4":"PBS","5":"2/27/2017","6":"6/26/2017","7":"1_KO_RA_PBS","_rn_":"JK005"},{"1":"1","2":"WT","3":"SM","4":"PBS","5":"2/27/2017","6":"6/29/2017","7":"1_WT_SM_PBS","_rn_":"JK011"},{"1":"1","2":"KO","3":"RA","4":"FLU","5":"2/27/2017","6":"6/30/2017","7":"1_KO_RA_FLU","_rn_":"JK012"},{"1":"1","2":"WT","3":"SM","4":"PBS","5":"2/27/2017","6":"6/29/2017","7":"1_WT_SM_PBS","_rn_":"JK014"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
+    ##       Batch MMP13 SMOKE FLU       DOB  SAC_DATE SingleFactor
+    ## JK001     1    KO    RA PBS 2/27/2017 6/26/2017  1_KO_RA_PBS
+    ## JK004     1    KO    RA PBS 2/27/2017 6/26/2017  1_KO_RA_PBS
+    ## JK005     1    KO    RA PBS 2/27/2017 6/26/2017  1_KO_RA_PBS
+    ## JK011     1    WT    SM PBS 2/27/2017 6/29/2017  1_WT_SM_PBS
+    ## JK012     1    KO    RA FLU 2/27/2017 6/30/2017  1_KO_RA_FLU
+    ## JK014     1    WT    SM PBS 2/27/2017 6/29/2017  1_WT_SM_PBS
 
-# Preprocess the input data
+Preprocess the input data
+=========================
 
-```r
+``` r
 if (!require("edgeR",quietly=T)) BiocManager::install("edgeR")
 library(edgeR)
 y=DGEList(counts=c,samples=a)
@@ -67,13 +80,15 @@ y <- calcNormFactors(y)
 head(y$samples[,2:3])
 ```
 
-<div data-pagedtable="false">
-  <script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["lib.size"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["norm.factors"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"20100075","2":"0.9927551","_rn_":"JK001"},{"1":"13444148","2":"0.9744933","_rn_":"JK004"},{"1":"19755033","2":"1.0433833","_rn_":"JK005"},{"1":"17655062","2":"0.9687881","_rn_":"JK011"},{"1":"21767921","2":"1.0802167","_rn_":"JK012"},{"1":"14472144","2":"1.0178222","_rn_":"JK014"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
+    ##       lib.size norm.factors
+    ## JK001 20100075    0.9927551
+    ## JK004 13444148    0.9744933
+    ## JK005 19755033    1.0433833
+    ## JK011 17655062    0.9687881
+    ## JK012 21767921    1.0802167
+    ## JK014 14472144    1.0178222
 
-```r
+``` r
 logcpm <- cpm(y, prior.count=2, log=TRUE)
 logfile="logcpm.csv"
 if (!file.exists(logfile)) write.csv(logcpm,logfile)
@@ -81,41 +96,41 @@ if (!file.exists(logfile)) write.csv(logcpm,logfile)
 # setwd("2018 results") # allow results to be written into the subfolder
 ```
 
-# Principal Component Analysis
+Principal Component Analysis
+============================
 
-```r
+``` r
 if (!require("FactoMineR",quietly=T)) install.packages("FactoMineR")
 library(FactoMineR)
 al=cbind(a,t(logcpm))
 colnames(al)[1:10] # annotaion goes from 1st to 7th column
 ```
 
-```
-##  [1] "Batch"        "MMP13"        "SMOKE"        "FLU"         
-##  [5] "DOB"          "SAC_DATE"     "SingleFactor" "Rp1"         
-##  [9] "Sox17"        "Mrpl15"
-```
+    ##  [1] "Batch"        "MMP13"        "SMOKE"        "FLU"         
+    ##  [5] "DOB"          "SAC_DATE"     "SingleFactor" "Rp1"         
+    ##  [9] "Sox17"        "Mrpl15"
 
-```r
+``` r
 # multiple factors
 m.pca=PCA(al[,-c(5:7)],scale.unit=T,ncp=5,quali.sup=1:4,graph=F)
 plotellipses(m.pca)
 ```
 
-![](README_files/figure-html/pca-1.png)<!-- -->
+![](README_files/figure-markdown_github/pca-1.png)
 
-```r
+``` r
 # single factor
 s.pca=PCA(al[,-c(1:6)],scale.unit=T,ncp=5,quali.sup=1,graph=F)
 # plot.PCA(s.pca,axes=c(1,2),choix="ind",habillage = 1)
 plotellipses(s.pca)
 ```
 
-![](README_files/figure-html/pca-2.png)<!-- -->
+![](README_files/figure-markdown_github/pca-2.png)
 
-# Fit generalized linear model using edgeR
+Fit generalized linear model using edgeR
+========================================
 
-```r
+``` r
 # design=model.matrix(~MMP13+SMOKE+FLU,data=a)
 # design=model.matrix(~MMP13*SMOKE*FLU,data=a)
 design=model.matrix(~MMP13*SMOKE*FLU+Batch,data=a)
@@ -128,12 +143,13 @@ allList=function(cf){ # select complete unordered test result regarding each coe
    colnames(dt)=paste0(colnames(design)[cf],"_",colnames(dt))
    return(dt)
 }
-write.csv(cbind(allList(2),allList(3),allList(4),allList(5),allList(6),allList(7),allList(8)),"GLM_All.csv") # combine and write to csv file
+# write.csv(cbind(allList(2),allList(3),allList(4),allList(5),allList(6),allList(7),allList(8)),"GLM_All.csv") # combine and write to csv file
 ```
 
-# Output filtered gene counts and/or their names to console or data files
+Output filtered gene counts and/or their names to console or data files
+=======================================================================
 
-```r
+``` r
 # functions that select stats on each factor
 filterCount=function(cf){
    cat(paste0(colnames(design)[cf]," Counts:\n"))
@@ -162,28 +178,27 @@ for (i in 2:ncol(design)){ # uncomment following lines to enable the outputs
 }
 ```
 
-```
-## MMP13WT Counts:
-## 896 
-## SMOKESM Counts:
-## 68 
-## FLUPBS Counts:
-## 0 
-## Batch Counts:
-## 1674 
-## MMP13WT:SMOKESM Counts:
-## 1 
-## MMP13WT:FLUPBS Counts:
-## 3 
-## SMOKESM:FLUPBS Counts:
-## 699 
-## MMP13WT:SMOKESM:FLUPBS Counts:
-## 2
-```
+    ## MMP13WT Counts:
+    ## 896 
+    ## SMOKESM Counts:
+    ## 68 
+    ## FLUPBS Counts:
+    ## 0 
+    ## Batch Counts:
+    ## 1674 
+    ## MMP13WT:SMOKESM Counts:
+    ## 1 
+    ## MMP13WT:FLUPBS Counts:
+    ## 3 
+    ## SMOKESM:FLUPBS Counts:
+    ## 699 
+    ## MMP13WT:SMOKESM:FLUPBS Counts:
+    ## 2
 
-# Plot heatmap with top genes found significant for each factor
+Plot heatmap with top genes found significant for each factor
+=============================================================
 
-```r
+``` r
 if (!require("pheatmap",quietly=T)) install.packages("pheatmap")
 library(pheatmap)
 
@@ -202,65 +217,50 @@ for (i in 2:ncol(design)){
 }
 ```
 
-```
-## MMP13WT top30 :
-## MMP13WT Counts:
-```
+    ## MMP13WT top30 :
+    ## MMP13WT Counts:
 
-![](README_files/figure-html/heatmap-1.png)<!-- -->
+![](README_files/figure-markdown_github/heatmap-1.png)
 
-```
-## SMOKESM top30 :
-## SMOKESM Counts:
-```
+    ## SMOKESM top30 :
+    ## SMOKESM Counts:
 
-![](README_files/figure-html/heatmap-2.png)<!-- -->
+![](README_files/figure-markdown_github/heatmap-2.png)
 
-```
-## FLUPBS top30 :
-## FLUPBS Counts:
-```
+    ## FLUPBS top30 :
+    ## FLUPBS Counts:
 
-![](README_files/figure-html/heatmap-3.png)<!-- -->
+![](README_files/figure-markdown_github/heatmap-3.png)
 
-```
-## Batch top30 :
-## Batch Counts:
-```
+    ## Batch top30 :
+    ## Batch Counts:
 
-![](README_files/figure-html/heatmap-4.png)<!-- -->
+![](README_files/figure-markdown_github/heatmap-4.png)
 
-```
-## MMP13WT:SMOKESM top30 :
-## MMP13WT:SMOKESM Counts:
-```
+    ## MMP13WT:SMOKESM top30 :
+    ## MMP13WT:SMOKESM Counts:
 
-![](README_files/figure-html/heatmap-5.png)<!-- -->
+![](README_files/figure-markdown_github/heatmap-5.png)
 
-```
-## MMP13WT:FLUPBS top30 :
-## MMP13WT:FLUPBS Counts:
-```
+    ## MMP13WT:FLUPBS top30 :
+    ## MMP13WT:FLUPBS Counts:
 
-![](README_files/figure-html/heatmap-6.png)<!-- -->
+![](README_files/figure-markdown_github/heatmap-6.png)
 
-```
-## SMOKESM:FLUPBS top30 :
-## SMOKESM:FLUPBS Counts:
-```
+    ## SMOKESM:FLUPBS top30 :
+    ## SMOKESM:FLUPBS Counts:
 
-![](README_files/figure-html/heatmap-7.png)<!-- -->
+![](README_files/figure-markdown_github/heatmap-7.png)
 
-```
-## MMP13WT:SMOKESM:FLUPBS top30 :
-## MMP13WT:SMOKESM:FLUPBS Counts:
-```
+    ## MMP13WT:SMOKESM:FLUPBS top30 :
+    ## MMP13WT:SMOKESM:FLUPBS Counts:
 
-![](README_files/figure-html/heatmap-8.png)<!-- -->
+![](README_files/figure-markdown_github/heatmap-8.png)
 
-# Plot significant gene counts of each major factor in a Venn diagram
+Plot significant gene counts of each major factor in a Venn diagram
+===================================================================
 
-```r
+``` r
 if (!require("systemPipeR",quietly=T)) BiocManager::install("systemPipeR")
 library(systemPipeR)
 
@@ -271,4 +271,4 @@ setlist=list(MMP13=row.names(topTags(glmQLFTest(fit, coef=2),p.value=0.05,n=9999
 vennPlot(overLapper(setlist,type="vennsets"))
 ```
 
-![](README_files/figure-html/venn-1.png)<!-- -->
+![](README_files/figure-markdown_github/venn-1.png)

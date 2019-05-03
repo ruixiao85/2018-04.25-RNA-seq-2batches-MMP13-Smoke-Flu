@@ -56,7 +56,7 @@ head(c) # count table overview
 
 ```r
 a=read.csv("SampleAnnotation2Batches.csv",header=T,stringsAsFactors=F,row.names=1)
-a$SingleFactor=paste(a$Batch,a$MMP13,a$SMOKE,a$FLU,sep="_") # join factors
+a$SingleFactor=paste(a$Batch,a$MMP13,a$SMOKE,a$FLU,sep="_") # merge factors into one for some further analysis
 head(a) # sample annotation overview
 ```
 
@@ -97,22 +97,14 @@ logcpm <- cpm(y, prior.count=2, log=TRUE)
 logfile="logcpm.csv"
 if (!file.exists(logfile)) write.csv(logcpm,logfile)
 
-# setwd("2018 results") # allow results to write into the subfolder
+# setwd("2018 results") # allow results to be written into the subfolder
 ```
 
 # Principal Component Analysis
 
 ```r
 if (!require("FactoMineR",quietly=T)) install.packages("FactoMineR")
-```
-
-```
-## Warning: package 'FactoMineR' was built under R version 3.5.3
-```
-
-```r
 library(FactoMineR)
-
 al=cbind(a,t(logcpm))
 colnames(al)[1:10] # annotaion goes from 1st to 7th column
 ```
@@ -132,6 +124,7 @@ plotellipses(m.pca)
 ![](README_files/figure-html/pca-1.png)<!-- -->
 
 ```r
+# single factor
 s.pca=PCA(al[,-c(1:6)],scale.unit=T,ncp=5,quali.sup=1,graph=F)
 # plot.PCA(s.pca,axes=c(1,2),choix="ind",habillage = 1)
 plotellipses(s.pca)
@@ -139,22 +132,22 @@ plotellipses(s.pca)
 
 ![](README_files/figure-html/pca-2.png)<!-- -->
 
-# Fit GLM with edgeR
+# Fit generalized linear model using edgeR
 
 ```r
 # design=model.matrix(~MMP13+SMOKE+FLU,data=a)
 # design=model.matrix(~MMP13*SMOKE*FLU,data=a)
 design=model.matrix(~MMP13*SMOKE*FLU+Batch,data=a)
 # design=model.matrix(~MMP13*SMOKE*FLU*Batch,data=a); design=design[,-16]
-
 y <- estimateDisp(y,design)
 fit <- glmQLFit(y, design)
-allList=function(cf){
+
+allList=function(cf){ # select complete unordered test result regarding each coefficient
    dt=as.data.frame(topTags(glmQLFTest(fit,coef=cf),n=999999,sort.by="none"))
    colnames(dt)=paste0(colnames(design)[cf],"_",colnames(dt))
    return(dt)
 }
-write.csv(cbind(allList(2),allList(3),allList(4),allList(5),allList(6),allList(7),allList(8)),"GLM_All.csv")
+write.csv(cbind(allList(2),allList(3),allList(4),allList(5),allList(6),allList(7),allList(8)),"GLM_All.csv") # combine and write to csv file
 ```
 
 # Functions that selectively output stats for each factor in the model
@@ -211,20 +204,10 @@ for (i in 2:ncol(design)){
 ## 2
 ```
 
-## Output raw glm results
-
-
 # Plot heatmap with top genes found significant for each factor
 
 ```r
 if (!require("pheatmap",quietly=T)) install.packages("pheatmap")
-```
-
-```
-## Warning: package 'pheatmap' was built under R version 3.5.3
-```
-
-```r
 library(pheatmap)
 
 order=a[order(a$Batch,a$MMP13,a$SMOKE,a$FLU),] # ordered annotation
@@ -302,25 +285,13 @@ for (i in 2:ncol(design)){
 
 ```r
 if (!require("systemPipeR",quietly=T)) BiocManager::install("systemPipeR")
-```
-
-```
-## Warning: package 'matrixStats' was built under R version 3.5.3
-```
-
-```r
 library(systemPipeR)
 
 setlist=list(MMP13=row.names(topTags(glmQLFTest(fit, coef=2),p.value=0.05,n=999999)),
            Smoke=row.names(topTags(glmQLFTest(fit, coef=3),p.value=0.05,n=999999)),
            SmokeFlu=row.names(topTags(glmQLFTest(fit, coef=7),p.value=0.05,n=999999)))
 
-# pdf("venn.pdf")
 vennPlot(overLapper(setlist,type="vennsets"))
 ```
 
 ![](README_files/figure-html/venn-1.png)<!-- -->
-
-```r
-# dev.off()
-```

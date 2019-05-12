@@ -5,7 +5,7 @@ p=cbind(p,read.table("counts_table_raw set 2.txt",sep="\t",header=T,stringsAsFac
 dim(p)
 head(p)
 
-##PCA
+##PCA 
 library(FactoMineR)
 PCA(t(p))
 dir()
@@ -118,29 +118,27 @@ dev.off()
 
 
 ## pairwise Only with exactTest
-y <- calcNormFactors(y)
-y$samples
-y <- estimateDisp(y)
-write.csv(topTags(exactTest(y, pair=c("WT RA PBS","KO RA PBS")),n=999999),"KO RA PBS vs WT RA PBS.csv")
-write.csv(topTags(exactTest(y, pair=c("WT RA PBS","WT SM FLU")),n=999999),"WT SM FLU vs WT RA PBS.csv")
-write.csv(topTags(exactTest(y, pair=c("WT RA PBS","KO SM FLU")),n=999999),"KO SM FLU vs WT RA PBS.csv")
+y1 <- estimateDisp(y)
+write.csv(topTags(exactTest(y1, pair=c("WT RA PBS","KO RA PBS")),n=999999),"KO RA PBS vs WT RA PBS.csv")
+write.csv(topTags(exactTest(y1, pair=c("WT RA PBS","WT SM FLU")),n=999999),"WT SM FLU vs WT RA PBS.csv")
+write.csv(topTags(exactTest(y1, pair=c("WT RA PBS","KO SM FLU")),n=999999),"KO SM FLU vs WT RA PBS.csv")
 
-write.csv(topTags(exactTest(y, pair=c("WT SM FLU","KO SM FLU")),n=999999),"KO SM FLU vs WT SM FLU.csv")
-write.csv(topTags(exactTest(y, pair=c("WT SM PBS","KO SM FLU")),n=999999),"KO SM FLU vs WT SM PBS.csv")
-write.csv(topTags(exactTest(y, pair=c("WT RA FLU","KO SM FLU")),n=999999),"KO SM FLU vs WT RA FLU.csv")
+write.csv(topTags(exactTest(y1, pair=c("WT SM FLU","KO SM FLU")),n=999999),"KO SM FLU vs WT SM FLU.csv")
+write.csv(topTags(exactTest(y1, pair=c("WT SM PBS","KO SM FLU")),n=999999),"KO SM FLU vs WT SM PBS.csv")
+write.csv(topTags(exactTest(y1, pair=c("WT RA FLU","KO SM FLU")),n=999999),"KO SM FLU vs WT RA FLU.csv")
 
-write.csv(topTags(exactTest(y, pair=c("WT RA PBS","WT SM PBS")),n=999999),"WT SM PBS vs WT RA PBS.csv")
-write.csv(topTags(exactTest(y, pair=c("WT RA PBS","KO SM PBS")),n=999999),"KO SM PBS vs WT RA PBS.csv")
-write.csv(topTags(exactTest(y, pair=c("WT RA PBS","WT RA FLU")),n=999999),"WT RA FLU vs WT RA PBS.csv")
-write.csv(topTags(exactTest(y, pair=c("WT RA PBS","KO RA FLU")),n=999999),"KO RA FLU vs WT RA PBS.csv")
+write.csv(topTags(exactTest(y1, pair=c("WT RA PBS","WT SM PBS")),n=999999),"WT SM PBS vs WT RA PBS.csv")
+write.csv(topTags(exactTest(y1, pair=c("WT RA PBS","KO SM PBS")),n=999999),"KO SM PBS vs WT RA PBS.csv")
+write.csv(topTags(exactTest(y1, pair=c("WT RA PBS","WT RA FLU")),n=999999),"WT RA FLU vs WT RA PBS.csv")
+write.csv(topTags(exactTest(y1, pair=c("WT RA PBS","KO RA FLU")),n=999999),"KO RA FLU vs WT RA PBS.csv")
 
-write.csv(topTags(exactTest(y, pair=c("KO RA PBS","WT SM PBS")),n=999999),"WT SM PBS vs KO RA PBS.csv")
-write.csv(topTags(exactTest(y, pair=c("KO RA PBS","KO SM PBS")),n=999999),"KO SM PBS vs KO RA PBS.csv")
-write.csv(topTags(exactTest(y, pair=c("KO RA PBS","WT RA FLU")),n=999999),"WT RA FLU vs KO RA PBS.csv")
-write.csv(topTags(exactTest(y, pair=c("KO RA PBS","KO RA FLU")),n=999999),"KO RA FLU vs KO RA PBS.csv")
+write.csv(topTags(exactTest(y1, pair=c("KO RA PBS","WT SM PBS")),n=999999),"WT SM PBS vs KO RA PBS.csv")
+write.csv(topTags(exactTest(y1, pair=c("KO RA PBS","KO SM PBS")),n=999999),"KO SM PBS vs KO RA PBS.csv")
+write.csv(topTags(exactTest(y1, pair=c("KO RA PBS","WT RA FLU")),n=999999),"WT RA FLU vs KO RA PBS.csv")
+write.csv(topTags(exactTest(y1, pair=c("KO RA PBS","KO RA FLU")),n=999999),"KO RA FLU vs KO RA PBS.csv")
 
 redf=function(baseline,affected){# b vs a
-   dt=topTags(exactTest(y, pair=c(baseline,affected)),n=999999,sort="none")[[1]]
+   dt=topTags(exactTest(y1, pair=c(baseline,affected)),n=999999,sort="none")[[1]]
    dt$FC=ifelse(dt$logFC>0,2^dt$logFC,-1*(2^(-dt$logFC)))
    for (c in 1:ncol(dt)){
       colnames(dt)[c]=paste0(affected," vs ",baseline," _ ",colnames(dt)[c])

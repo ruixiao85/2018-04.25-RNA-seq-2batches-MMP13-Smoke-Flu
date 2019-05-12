@@ -13,7 +13,7 @@ head(a) # sample annotation overview
 
 if (!require("edgeR",quietly=T)) BiocManager::install("edgeR")
 library(edgeR)
-y=DGEList(counts=c,samples=a)
+y=DGEList(counts=c,samples=a,group=a$SingleFactor)
 keep <- rowSums(cpm(y)>1) >= 2
 y <- y[keep, , keep.lib.sizes=FALSE]
 y <- calcNormFactors(y)

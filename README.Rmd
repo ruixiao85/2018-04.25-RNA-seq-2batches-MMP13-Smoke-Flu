@@ -34,6 +34,10 @@ dim(c)
 head(c) # count table overview
 a=read.csv("SampleAnnotation2Batches.csv",header=T,stringsAsFactors=F,row.names=1)
 a$SingleFactor=paste(a$Batch,a$MMP13,a$SMOKE,a$FLU,sep="_") # merge factors into one for some further analysis
+a$Batch=factor(a$Batch,levels=c(1,2))
+a$MMP13=factor(a$MMP13,levels=c("WT","KO"))
+a$FLU=factor(a$FLU,levels=c("PBS","FLU"))
+a$SMOKE=factor(a$SMOKE,levels=c("RA","SM"))
 head(a) # sample annotation overview
 ```
 
@@ -41,7 +45,7 @@ head(a) # sample annotation overview
 ``` {r edgeRpre, message=FALSE}
 if (!require("edgeR",quietly=T)) BiocManager::install("edgeR")
 library(edgeR)
-y=DGEList(counts=c,samples=a)
+y=DGEList(counts=c,samples=a,group=a$SingleFactor)
 keep <- rowSums(cpm(y)>1) >= 2
 y <- y[keep, , keep.lib.sizes=FALSE]
 y <- calcNormFactors(y)
@@ -69,14 +73,34 @@ s.pca=PCA(al[,-c(1:6)],scale.unit=T,ncp=5,quali.sup=1,graph=F)
 plotellipses(s.pca)
 ```
 
-# Fit generalized linear model using edgeR
+# Perform pairwise comparisons
+```{r edgeRpair, message=FALSE, warning=FALSE}
+y1 <- estimateDisp(y,model.matrix(~SingleFactor,data=a))
+pair=c("2_WT_RA_PBS","1_KO_RA_PBS") #  c("A","B") = B - A
+
+tt=topTags(exactTest(y1, pair),n=9999999,sort.by="none") # select all with original order
+# write.csv(tt,paste0("Pair_",paste(pair,collapse=" vs "),".csv")) # save to local file
+
+if (!require("ggplot2",quietly=T)) install.packages("ggplot2")
+library(ggplot2)
+attach(tt$table)
+tt$table$sig=ifelse(PValue<0.05&abs(logFC)>1,logFC,0)
+p = ggplot(tt$table,aes(logFC,-log10(PValue)))+
+  geom_point(aes(col=sig))+
+  scale_colour_gradient2(low="blue",mid="black",high="red")
+p
+detach(tt$table)
+
+```
+
+# Fit generalized linear model
 ```{r edgeRglm, message=FALSE}
 # design=model.matrix(~MMP13+SMOKE+FLU,data=a)
 # design=model.matrix(~MMP13*SMOKE*FLU,data=a)
 design=model.matrix(~MMP13*SMOKE*FLU+Batch,data=a)
 # design=model.matrix(~MMP13*SMOKE*FLU*Batch,data=a); design=design[,-16]
-y <- estimateDisp(y,design)
-fit <- glmQLFit(y, design)
+y2 <- estimateDisp(y,design)
+fit <- glmQLFit(y2, design)
 
 allList=function(cf){ # select complete unordered test result regarding each coefficient
    dt=as.data.frame(topTags(glmQLFTest(fit,coef=cf),n=999999,sort.by="none"))
@@ -86,7 +110,7 @@ allList=function(cf){ # select complete unordered test result regarding each coe
 # write.csv(cbind(allList(2),allList(3),allList(4),allList(5),allList(6),allList(7),allList(8)),"GLM_All.csv") # combine and write to csv file
 ```
 
-# Output filtered gene counts and/or their names to console or data files
+## Output filtered gene counts and/or their names to console or data files
 ```{r filteroutput, message=FALSE}
 # functions that select stats on each factor
 filterCount=function(cf){
@@ -116,7 +140,7 @@ for (i in 2:ncol(design)){ # uncomment following lines to enable the outputs
 }
 ```
 
-# Plot heatmap with top genes found significant for each factor
+## Plot heatmap with top genes found significant for each factor
 ```{r heatmap, message=FALSE, warning=FALSE}
 if (!require("pheatmap",quietly=T)) install.packages("pheatmap")
 library(pheatmap)
@@ -128,7 +152,7 @@ plotPheatmap=function(cf,clus_col=T,pdf=T){
    d=as.data.frame(logcpm[row.names(filterTop(cf)),])
    outfile=gsub(":","+",paste("heatmap","coef",i,colnames(design)[i],filterCount(cf),sep="_"))
    if (pdf) pdf(paste0(outfile,".pdf"),width=9,height=6)
-   pheatmap(d,scale="row",annotation_col=order[,c(1,2:4)],cluster_cols=clus_col,main=outfile)
+   pheatmap(d,scale="row",annotation_col=order[,1:4],cluster_cols=clus_col,main=outfile)
    if (pdf) dev.off()
 }
 for (i in 2:ncol(design)){
@@ -136,7 +160,7 @@ for (i in 2:ncol(design)){
 }
 ```
 
-# Plot significant gene counts of each major factor in a Venn diagram
+## Plot significant gene counts of each major factor in a Venn diagram
 ```{r venn, message=FALSE, warning=FALSE}
 if (!require("systemPipeR",quietly=T)) BiocManager::install("systemPipeR")
 library(systemPipeR)
@@ -147,3 +171,5 @@ setlist=list(MMP13=row.names(topTags(glmQLFTest(fit, coef=2),p.value=0.05,n=9999
 
 vennPlot(overLapper(setlist,type="vennsets"))
 ```
+
+Data credits: Jeanine D'Armiento, Monica Goldklang, Kyle Stearns; Columbia University Medical Center

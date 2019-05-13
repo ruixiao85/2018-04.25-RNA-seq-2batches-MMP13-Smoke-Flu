@@ -3,17 +3,21 @@ RNA-seq MMP13 Smoke Flu
 Rui Xiao
 May 3, 2019
 
--   [Read the raw count-table and sample annotation files](#read-the-raw-count-table-and-sample-annotation-files)
--   [Preprocess the input data](#preprocess-the-input-data)
--   [Principal Component Analysis](#principal-component-analysis)
--   [Perform pairwise comparisons](#perform-pairwise-comparisons)
--   [Fit generalized linear model](#fit-generalized-linear-model)
-    -   [Output filtered gene counts and/or their names to console or data files](#output-filtered-gene-counts-andor-their-names-to-console-or-data-files)
-    -   [Plot heatmap with top genes found significant for each factor](#plot-heatmap-with-top-genes-found-significant-for-each-factor)
-    -   [Plot significant gene counts of each major factor in a Venn diagram](#plot-significant-gene-counts-of-each-major-factor-in-a-venn-diagram)
+  - [Read the raw count-table and sample annotation
+    files](#read-the-raw-count-table-and-sample-annotation-files)
+  - [Preprocess the input data](#preprocess-the-input-data)
+  - [Principal Component Analysis](#principal-component-analysis)
+  - [Perform pairwise comparisons](#perform-pairwise-comparisons)
+  - [Fit generalized linear model](#fit-generalized-linear-model)
+      - [Output filtered gene counts and/or their names to console or
+        data
+        files](#output-filtered-gene-counts-andor-their-names-to-console-or-data-files)
+      - [Plot heatmap with top genes found significant for each
+        factor](#plot-heatmap-with-top-genes-found-significant-for-each-factor)
+      - [Plot significant gene counts of each major factor in a Venn
+        diagram](#plot-significant-gene-counts-of-each-major-factor-in-a-venn-diagram)
 
-Read the raw count-table and sample annotation files
-====================================================
+# Read the raw count-table and sample annotation files
 
 ``` r
 if (!requireNamespace("BiocManager",quietly=T)) install.packages("BiocManager")
@@ -72,8 +76,7 @@ head(a) # sample annotation overview
     ## JK012     1    KO    RA FLU 2/27/2017 6/30/2017  1_KO_RA_FLU
     ## JK014     1    WT    SM PBS 2/27/2017 6/29/2017  1_WT_SM_PBS
 
-Preprocess the input data
-=========================
+# Preprocess the input data
 
 ``` r
 if (!require("edgeR",quietly=T)) BiocManager::install("edgeR")
@@ -99,10 +102,12 @@ logfile="logcpm.csv"
 if (!file.exists(logfile)) write.csv(logcpm,logfile)
 
 # setwd("2018 results") # allow results to be written into the subfolder
+
+if (!require("ggplot2")) install.packages("ggplot2")
+library(ggplot2)
 ```
 
-Principal Component Analysis
-============================
+# Principal Component Analysis
 
 ``` r
 if (!require("FactoMineR",quietly=T)) install.packages("FactoMineR")
@@ -121,7 +126,7 @@ m.pca=PCA(al[,-c(5:7)],scale.unit=T,ncp=5,quali.sup=1:4,graph=F)
 plotellipses(m.pca)
 ```
 
-![](README_files/figure-markdown_github/pca-1.png)
+![](README_files/figure-gfm/pca-1.png)<!-- -->
 
 ``` r
 # single factor
@@ -130,10 +135,9 @@ s.pca=PCA(al[,-c(1:6)],scale.unit=T,ncp=5,quali.sup=1,graph=F)
 plotellipses(s.pca)
 ```
 
-![](README_files/figure-markdown_github/pca-2.png)
+![](README_files/figure-gfm/pca-2.png)<!-- -->
 
-Perform pairwise comparisons
-============================
+# Perform pairwise comparisons
 
 ``` r
 y1 <- estimateDisp(y,model.matrix(~SingleFactor,data=a))
@@ -142,8 +146,6 @@ pair=c("2_WT_RA_PBS","1_KO_RA_PBS") #  c("A","B") = B - A
 tt=topTags(exactTest(y1, pair),n=9999999,sort.by="none") # select all with original order
 # write.csv(tt,paste0("Pair_",paste(pair,collapse=" vs "),".csv")) # save to local file
 
-if (!require("ggplot2",quietly=T)) install.packages("ggplot2")
-library(ggplot2)
 attach(tt$table)
 tt$table$sig=ifelse(PValue<0.05&abs(logFC)>1,logFC,0)
 p = ggplot(tt$table,aes(logFC,-log10(PValue)))+
@@ -152,20 +154,19 @@ p = ggplot(tt$table,aes(logFC,-log10(PValue)))+
 p
 ```
 
-![](README_files/figure-markdown_github/edgeRpair-1.png)
+![](README_files/figure-gfm/edgeRpair-1.png)<!-- -->
 
 ``` r
 detach(tt$table)
 ```
 
-Fit generalized linear model
-============================
+# Fit generalized linear model
 
 ``` r
 # design=model.matrix(~MMP13+SMOKE+FLU,data=a)
 # design=model.matrix(~MMP13*SMOKE*FLU,data=a)
-design=model.matrix(~MMP13*SMOKE*FLU+Batch,data=a)
-# design=model.matrix(~MMP13*SMOKE*FLU*Batch,data=a); design=design[,-16]
+ design=model.matrix(~MMP13*SMOKE*FLU+Batch,data=a)
+# design=model.matrix(~MMP13*SMOKE*FLU*Batch,data=a); design=design[,-c(13:16)]
 y2 <- estimateDisp(y,design)
 fit <- glmQLFit(y2, design)
 
@@ -177,27 +178,31 @@ allList=function(cf){ # select complete unordered test result regarding each coe
 # write.csv(cbind(allList(2),allList(3),allList(4),allList(5),allList(6),allList(7),allList(8)),"GLM_All.csv") # combine and write to csv file
 ```
 
-Output filtered gene counts and/or their names to console or data files
------------------------------------------------------------------------
+## Output filtered gene counts and/or their names to console or data files
 
 ``` r
 # functions that select stats on each factor
+ifSig=function(logFC,PValue,FDR){
+   # return(abs(logFC)>=1&PValue<0.05)
+   return(abs(logFC)>=1&FDR<0.05)
+   # return(abs(logFC)>=0.5849&FDR<0.1)
+}
 filterCount=function(cf){
    cat(paste0(colnames(design)[cf]," Counts:\n"))
-   return(nrow(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),abs(logFC)>log2(2)&FDR<0.05)))
+   return(nrow(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),ifSig(logFC,PValue,FDR))))
 }
-filterTop=function(cf,top=30){
+filterTop=function(cf,top=24){
    cat(paste0(colnames(design)[cf]," top",top," :\n"))
    return(topTags(glmQLFTest(fit, coef=cf),n=top))
 }
 filterName=function(cf){
    cat(paste0(colnames(design)[cf]," Name:\n"))
-   return(row.names(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),abs(logFC)>log2(2)&FDR<0.05)))
+   return(row.names(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),ifSig(logFC,PValue,FDR))))
    
 }
 filterWrite=function(cf){
    cat(paste0(colnames(design)[cf]," written to file:\n"))
-   write.csv(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),abs(logFC)>log2(2)&FDR<0.05),
+   write.csv(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),ifSig(logFC,PValue,FDR)),
              paste0("",gsub(":","+",colnames(design)[cf]),".csv"))
 }
 
@@ -226,8 +231,7 @@ for (i in 2:ncol(design)){ # uncomment following lines to enable the outputs
     ## MMP13KO:SMOKESM:FLUFLU Counts:
     ## 2
 
-Plot heatmap with top genes found significant for each factor
--------------------------------------------------------------
+## Plot heatmap with top genes found significant for each factor
 
 ``` r
 if (!require("pheatmap",quietly=T)) install.packages("pheatmap")
@@ -248,48 +252,47 @@ for (i in 2:ncol(design)){
 }
 ```
 
-    ## MMP13KO top30 :
+    ## MMP13KO top24 :
     ## MMP13KO Counts:
 
-![](README_files/figure-markdown_github/heatmap-1.png)
+![](README_files/figure-gfm/heatmap-1.png)<!-- -->
 
-    ## SMOKESM top30 :
+    ## SMOKESM top24 :
     ## SMOKESM Counts:
 
-![](README_files/figure-markdown_github/heatmap-2.png)
+![](README_files/figure-gfm/heatmap-2.png)<!-- -->
 
-    ## FLUFLU top30 :
+    ## FLUFLU top24 :
     ## FLUFLU Counts:
 
-![](README_files/figure-markdown_github/heatmap-3.png)
+![](README_files/figure-gfm/heatmap-3.png)<!-- -->
 
-    ## Batch2 top30 :
+    ## Batch2 top24 :
     ## Batch2 Counts:
 
-![](README_files/figure-markdown_github/heatmap-4.png)
+![](README_files/figure-gfm/heatmap-4.png)<!-- -->
 
-    ## MMP13KO:SMOKESM top30 :
+    ## MMP13KO:SMOKESM top24 :
     ## MMP13KO:SMOKESM Counts:
 
-![](README_files/figure-markdown_github/heatmap-5.png)
+![](README_files/figure-gfm/heatmap-5.png)<!-- -->
 
-    ## MMP13KO:FLUFLU top30 :
+    ## MMP13KO:FLUFLU top24 :
     ## MMP13KO:FLUFLU Counts:
 
-![](README_files/figure-markdown_github/heatmap-6.png)
+![](README_files/figure-gfm/heatmap-6.png)<!-- -->
 
-    ## SMOKESM:FLUFLU top30 :
+    ## SMOKESM:FLUFLU top24 :
     ## SMOKESM:FLUFLU Counts:
 
-![](README_files/figure-markdown_github/heatmap-7.png)
+![](README_files/figure-gfm/heatmap-7.png)<!-- -->
 
-    ## MMP13KO:SMOKESM:FLUFLU top30 :
+    ## MMP13KO:SMOKESM:FLUFLU top24 :
     ## MMP13KO:SMOKESM:FLUFLU Counts:
 
-![](README_files/figure-markdown_github/heatmap-8.png)
+![](README_files/figure-gfm/heatmap-8.png)<!-- -->
 
-Plot significant gene counts of each major factor in a Venn diagram
--------------------------------------------------------------------
+## Plot significant gene counts of each major factor in a Venn diagram
 
 ``` r
 if (!require("systemPipeR",quietly=T)) BiocManager::install("systemPipeR")
@@ -297,11 +300,21 @@ library(systemPipeR)
 
 setlist=list(MMP13=row.names(topTags(glmQLFTest(fit, coef=2),p.value=0.05,n=999999)),
            Smoke=row.names(topTags(glmQLFTest(fit, coef=3),p.value=0.05,n=999999)),
-           SmokeFlu=row.names(topTags(glmQLFTest(fit, coef=7),p.value=0.05,n=999999)))
-
+           Flu=row.names(topTags(glmQLFTest(fit, coef=4),p.value=0.05,n=999999)))
 vennPlot(overLapper(setlist,type="vennsets"))
 ```
 
-![](README_files/figure-markdown_github/venn-1.png)
+![](README_files/figure-gfm/venn-1.png)<!-- -->
 
-Data credits: Jeanine D'Armiento, Monica Goldklang, Kyle Stearns; Columbia University Medical Center
+``` r
+setlist=list(MMP13=row.names(topTags(glmQLFTest(fit, coef=2),p.value=0.05,n=999999)),
+           Smoke=row.names(topTags(glmQLFTest(fit, coef=3),p.value=0.05,n=999999)),
+           Flu=row.names(topTags(glmQLFTest(fit, coef=4),p.value=0.05,n=999999)),
+           Batch=row.names(topTags(glmQLFTest(fit, coef=5),p.value=0.05,n=999999)))
+vennPlot(overLapper(setlist,type="vennsets"))
+```
+
+![](README_files/figure-gfm/venn-2.png)<!-- -->
+
+Data credits: Jeanine D’Armiento, Monica Goldklang, Kyle Stearns;
+Columbia University Medical Center

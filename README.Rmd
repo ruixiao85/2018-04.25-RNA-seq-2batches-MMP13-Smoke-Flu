@@ -17,7 +17,8 @@ output:
       highlight: textmate
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, warning=FALSE}
+if (!requireNamespace("knitr",quietly=T)) install.packages("knitr")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -56,6 +57,9 @@ logfile="logcpm.csv"
 if (!file.exists(logfile)) write.csv(logcpm,logfile)
 
 # setwd("2018 results") # allow results to be written into the subfolder
+
+if (!require("ggplot2")) install.packages("ggplot2")
+library(ggplot2)
 ```
 
 # Principal Component Analysis
@@ -81,8 +85,6 @@ pair=c("2_WT_RA_PBS","1_KO_RA_PBS") #  c("A","B") = B - A
 tt=topTags(exactTest(y1, pair),n=9999999,sort.by="none") # select all with original order
 # write.csv(tt,paste0("Pair_",paste(pair,collapse=" vs "),".csv")) # save to local file
 
-if (!require("ggplot2",quietly=T)) install.packages("ggplot2")
-library(ggplot2)
 attach(tt$table)
 tt$table$sig=ifelse(PValue<0.05&abs(logFC)>1,logFC,0)
 p = ggplot(tt$table,aes(logFC,-log10(PValue)))+
@@ -97,8 +99,8 @@ detach(tt$table)
 ```{r edgeRglm, message=FALSE}
 # design=model.matrix(~MMP13+SMOKE+FLU,data=a)
 # design=model.matrix(~MMP13*SMOKE*FLU,data=a)
-design=model.matrix(~MMP13*SMOKE*FLU+Batch,data=a)
-# design=model.matrix(~MMP13*SMOKE*FLU*Batch,data=a); design=design[,-16]
+ design=model.matrix(~MMP13*SMOKE*FLU+Batch,data=a)
+# design=model.matrix(~MMP13*SMOKE*FLU*Batch,data=a); design=design[,-c(13:16)]
 y2 <- estimateDisp(y,design)
 fit <- glmQLFit(y2, design)
 
@@ -113,22 +115,27 @@ allList=function(cf){ # select complete unordered test result regarding each coe
 ## Output filtered gene counts and/or their names to console or data files
 ```{r filteroutput, message=FALSE}
 # functions that select stats on each factor
+ifSig=function(logFC,PValue,FDR){
+   # return(abs(logFC)>=1&PValue<0.05)
+   return(abs(logFC)>=1&FDR<0.05)
+   # return(abs(logFC)>=0.5849&FDR<0.1)
+}
 filterCount=function(cf){
    cat(paste0(colnames(design)[cf]," Counts:\n"))
-   return(nrow(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),abs(logFC)>log2(2)&FDR<0.05)))
+   return(nrow(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),ifSig(logFC,PValue,FDR))))
 }
-filterTop=function(cf,top=30){
+filterTop=function(cf,top=24){
    cat(paste0(colnames(design)[cf]," top",top," :\n"))
    return(topTags(glmQLFTest(fit, coef=cf),n=top))
 }
 filterName=function(cf){
    cat(paste0(colnames(design)[cf]," Name:\n"))
-   return(row.names(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),abs(logFC)>log2(2)&FDR<0.05)))
+   return(row.names(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),ifSig(logFC,PValue,FDR))))
    
 }
 filterWrite=function(cf){
    cat(paste0(colnames(design)[cf]," written to file:\n"))
-   write.csv(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),abs(logFC)>log2(2)&FDR<0.05),
+   write.csv(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),ifSig(logFC,PValue,FDR)),
              paste0("",gsub(":","+",colnames(design)[cf]),".csv"))
 }
 
@@ -167,9 +174,15 @@ library(systemPipeR)
 
 setlist=list(MMP13=row.names(topTags(glmQLFTest(fit, coef=2),p.value=0.05,n=999999)),
            Smoke=row.names(topTags(glmQLFTest(fit, coef=3),p.value=0.05,n=999999)),
-           SmokeFlu=row.names(topTags(glmQLFTest(fit, coef=7),p.value=0.05,n=999999)))
-
+           Flu=row.names(topTags(glmQLFTest(fit, coef=4),p.value=0.05,n=999999)))
 vennPlot(overLapper(setlist,type="vennsets"))
+
+setlist=list(MMP13=row.names(topTags(glmQLFTest(fit, coef=2),p.value=0.05,n=999999)),
+           Smoke=row.names(topTags(glmQLFTest(fit, coef=3),p.value=0.05,n=999999)),
+           Flu=row.names(topTags(glmQLFTest(fit, coef=4),p.value=0.05,n=999999)),
+           Batch=row.names(topTags(glmQLFTest(fit, coef=5),p.value=0.05,n=999999)))
+vennPlot(overLapper(setlist,type="vennsets"))
+
 ```
 
 Data credits: Jeanine D'Armiento, Monica Goldklang, Kyle Stearns; Columbia University Medical Center

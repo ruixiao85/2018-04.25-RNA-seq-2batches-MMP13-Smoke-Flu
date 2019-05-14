@@ -157,13 +157,13 @@ for (r in 1:nrow(pairs)) {
    tt=topTags(exactTest(y1, pairs[r,]),n=9999999,sort.by="none") # select all with original order
    # write.csv(tt,paste0("Pair_",title,".csv")) # save to local file
    
-   tt$table$sig=ifelse(ifSig(tt$table$logFC,tt$table$PValue),tt$table$logFC,0)
+   tt$table$LogFC=with(tt$table,ifelse(ifSig(logFC,PValue),logFC,0))
    p = ggplot(tt$table,aes(logFC,-log10(PValue)))+
-      geom_point(aes(col=sig))+
+      geom_point(aes(col=LogFC))+
       scale_colour_gradient2(low="blue",mid="black",high="red")+
-      labs(title=title)
+      labs(title=title)+theme_bw()
    # p
-   tt_filter=subset(tt$table, tt$table$sig != 0)
+   tt_filter=subset(tt$table, tt$table$LogFC != 0)
    tt_filter_sort_top=tt_filter[order(tt_filter$FDR), ][1:24,]
    print(
       p+geom_text_repel(

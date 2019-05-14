@@ -56,6 +56,10 @@ logcpm <- cpm(y, prior.count=2, log=TRUE)
 logfile="logcpm.csv"
 if (!file.exists(logfile)) write.csv(logcpm,logfile)
 
+ifSig=function(logFC,P){ # P = PValue or FDR
+   return(abs(logFC)>=1&P<0.05)
+   # return(abs(logFC)>=0.5849&P<0.1)
+}
 # setwd("2018 results") # allow results to be written into the subfolder
 
 if (!require("ggplot2")) install.packages("ggplot2")
@@ -79,19 +83,35 @@ plotellipses(s.pca)
 
 # Perform pairwise comparisons
 ```{r edgeRpair, message=FALSE, warning=FALSE}
+if (!require("ggrepel")) install.packages("ggrepel")
+library(ggrepel)
 y1 <- estimateDisp(y,model.matrix(~SingleFactor,data=a))
-pair=c("2_WT_RA_PBS","1_KO_RA_PBS") #  c("A","B") = B - A
-
-tt=topTags(exactTest(y1, pair),n=9999999,sort.by="none") # select all with original order
-# write.csv(tt,paste0("Pair_",paste(pair,collapse=" vs "),".csv")) # save to local file
-
-attach(tt$table)
-tt$table$sig=ifelse(PValue<0.05&abs(logFC)>1,logFC,0)
-p = ggplot(tt$table,aes(logFC,-log10(PValue)))+
-  geom_point(aes(col=sig))+
-  scale_colour_gradient2(low="blue",mid="black",high="red")
-p
-detach(tt$table)
+pairs <- rbind(  #  c("A","B") = B - A
+      c("2_WT_RA_PBS","1_KO_RA_PBS"), # MMP13
+      c("2_WT_RA_PBS","1_WT_SM_PBS"), # Smoke
+      c("2_WT_RA_PBS","1_WT_RA_FLU") # Flu
+) 
+for (r in 1:nrow(pairs)) {
+   title=paste(pairs[r,],collapse=" vs ")
+   tt=topTags(exactTest(y1, pairs[r,]),n=9999999,sort.by="none") # select all with original order
+   # write.csv(tt,paste0("Pair_",title,".csv")) # save to local file
+   
+   tt$table$sig=ifelse(ifSig(tt$table$logFC,tt$table$PValue),tt$table$logFC,0)
+   p = ggplot(tt$table,aes(logFC,-log10(PValue)))+
+      geom_point(aes(col=sig))+
+      scale_colour_gradient2(low="blue",mid="black",high="red")+
+      labs(title=title)
+   # p
+   tt_filter=subset(tt$table, tt$table$sig != 0)
+   tt_filter_sort_top=tt_filter[order(tt_filter$FDR), ][1:24,]
+   print(
+      p+geom_text_repel(
+         data=tt_filter_sort_top,
+         aes(label=row.names(tt_filter_sort_top)),size=5,
+         box.padding = unit(0.35, "lines"),point.padding = unit(0.3, "lines")
+      )
+   )
+}
 
 ```
 
@@ -115,14 +135,9 @@ allList=function(cf){ # select complete unordered test result regarding each coe
 ## Output filtered gene counts and/or their names to console or data files
 ```{r filteroutput, message=FALSE}
 # functions that select stats on each factor
-ifSig=function(logFC,PValue,FDR){
-   # return(abs(logFC)>=1&PValue<0.05)
-   return(abs(logFC)>=1&FDR<0.05)
-   # return(abs(logFC)>=0.5849&FDR<0.1)
-}
 filterCount=function(cf){
    cat(paste0(colnames(design)[cf]," Counts:\n"))
-   return(nrow(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),ifSig(logFC,PValue,FDR))))
+   return(nrow(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),ifSig(logFC,FDR))))
 }
 filterTop=function(cf,top=24){
    cat(paste0(colnames(design)[cf]," top",top," :\n"))
@@ -130,12 +145,12 @@ filterTop=function(cf,top=24){
 }
 filterName=function(cf){
    cat(paste0(colnames(design)[cf]," Name:\n"))
-   return(row.names(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),ifSig(logFC,PValue,FDR))))
+   return(row.names(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),ifSig(logFC,FDR))))
    
 }
 filterWrite=function(cf){
    cat(paste0(colnames(design)[cf]," written to file:\n"))
-   write.csv(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),ifSig(logFC,PValue,FDR)),
+   write.csv(subset(as.data.frame(topTags(glmQLFTest(fit, coef=cf),n=999999)),ifSig(logFC,FDR)),
              paste0("",gsub(":","+",colnames(design)[cf]),".csv"))
 }
 

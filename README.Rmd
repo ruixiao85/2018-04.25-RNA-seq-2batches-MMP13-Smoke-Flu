@@ -84,9 +84,11 @@ plotellipses(s.pca)
 # Perform pairwise comparisons
 ```{r edgeRpair, message=FALSE, warning=FALSE}
 if (!require("dplyr",quietly=T)) install.packages("dplyr")
-library(dplyr)
+library(dplyr) # %>%, filter, ...
+if (!require("tibble",quietly=T)) install.packages("tibble")
+library(tibble) # rownames_to_column('gene') column_to_rownames('gene')
 if (!require("ggrepel")) install.packages("ggrepel")
-library(ggrepel)
+library(ggrepel) # dodge labels for ggplot2
 y1 <- estimateDisp(y,model.matrix(~SingleFactor,data=a))
 pairs <- rbind(  #  c("A","B") = B - A
       c("2_WT_RA_PBS","1_KO_RA_PBS"), # MMP13
@@ -104,10 +106,11 @@ for (r in 1:nrow(pairs)) {
       scale_colour_gradient2(low="blue",mid="black",high="red")+
       labs(title=title)+theme_bw()
    # p
-   tt_filter_sort_top=tt$table %>%
-                  filter(LogFC!=0) %>%
-                  arrange(FDR)  %>%
-                  top_n(24)
+   tt_filter_sort_top=(tt$table %>%
+                     rownames_to_column('gene') %>%
+                     filter(LogFC!=0) %>%
+                     arrange(FDR)  %>%
+                     column_to_rownames('gene'))[1:24,] # top_n() may need to ungroup
    print(
       p+geom_text_repel(
          data=tt_filter_sort_top,

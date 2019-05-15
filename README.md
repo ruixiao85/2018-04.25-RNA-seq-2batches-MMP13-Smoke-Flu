@@ -144,6 +144,8 @@ plotellipses(s.pca)
 # Perform pairwise comparisons
 
 ``` r
+if (!require("dplyr",quietly=T)) install.packages("dplyr")
+library(dplyr)
 if (!require("ggrepel")) install.packages("ggrepel")
 library(ggrepel)
 y1 <- estimateDisp(y,model.matrix(~SingleFactor,data=a))
@@ -163,8 +165,10 @@ for (r in 1:nrow(pairs)) {
       scale_colour_gradient2(low="blue",mid="black",high="red")+
       labs(title=title)+theme_bw()
    # p
-   tt_filter=subset(tt$table, tt$table$LogFC != 0)
-   tt_filter_sort_top=tt_filter[order(tt_filter$FDR), ][1:24,]
+   tt_filter_sort_top=tt$table %>%
+                  filter(LogFC!=0) %>%
+                  arrange(FDR)  %>%
+                  top_n(24)
    print(
       p+geom_text_repel(
          data=tt_filter_sort_top,

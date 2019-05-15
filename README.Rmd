@@ -104,12 +104,13 @@ for (r in 1:nrow(pairs)) {
       scale_colour_gradient2(low="blue",mid="black",high="red")+
       labs(title=title)+theme_bw()
    # p
-   tt_filter_sort=tt$table %>%
+   tt_filter_sort_top=tt$table %>%
                   filter(LogFC!=0) %>%
-                  arrange(FDR)
+                  arrange(FDR)  %>%
+                  top_n(24)
    print(
       p+geom_text_repel(
-         data=tt_filter_sort[1:24,],
+         data=tt_filter_sort_top,
          aes(label=row.names(tt_filter_sort_top)),size=5,
          box.padding = unit(0.35, "lines"),point.padding = unit(0.3, "lines")
       )
